@@ -23,7 +23,6 @@ app.get("/", (req, res) => {
 require("./app/routes/user.routes")(app);
 require("./app/routes/animal.routes")(app);
 require("./app/routes/ownership.routes")(app);
-
 app.post("/giris",(req,res,next)=>{
         db.query(`SELECT * FROM users WHERE username = ${db.escape(req.body.username)};`,
             (err,result)=>{

@@ -1,4 +1,29 @@
 const Animal = require("../models/animals.model.js");
+const multer = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'frontend/public')
+    },
+    filename: function (req, file, cb) {
+        const ext = file.mimetype.split('/')[1];
+        cb(null, `image-${Date.now()}.${ext}`)
+    }
+})
+
+const isImage = (req,file,callback) => {
+    if (file.mimetype.startsWith('image')){
+        callback(null,true);
+    }else {
+        callback(new Error('Only image is allowed'));
+    }
+}
+const upload = multer({
+    storage: storage,
+    fileFilter:isImage
+});
+
+exports.uploadImage = upload.single('image');
+
 
 // Create and Save a new Animal
 exports.create = (req, res) => {
@@ -8,7 +33,6 @@ exports.create = (req, res) => {
             message: "Content can not be empty!"
         });
     }
-
     // Create a Animal
     const animal = new Animal({
         animal_breed: req.body.animal_breed,
@@ -16,10 +40,12 @@ exports.create = (req, res) => {
         animal_age: req.body.animal_age,
         date_of_registration: req.body.date_of_registration,
         release_date: req.body.release_date,
-        date_of_death: req.body.date_of_death
+        date_of_death: req.body.date_of_death,
+        description: req.body.description,
+        image:req.file.filename,
     });
 
-    // Save Animal in the database
+    //Save Animal in the database
     Animal.create(animal, (err, data) => {
         if (err)
             res.status(500).send({
@@ -71,11 +97,15 @@ exports.update = (req, res) => {
         });
     }
 
-    console.log(req.body);
-
+    //console.log(req.body);
+    const body =  {
+        ...req.body,
+        image:req.file.filename
+    }
+    console.log('BODY',body);
     Animal.updateById(
         req.params.id,
-        new Animal(req.body),
+        new Animal(body),
         (err, data) => {
             if (err) {
                 if (err.kind === "not_found") {
